@@ -1,3 +1,4 @@
+
 #!/bin/bash -l
 
 set -e
@@ -86,4 +87,19 @@ if [ "${INPUT_CACHE_CLEAR^^}" == "TRUE" ]; then
     echo "SUCCESS: Site has been deployed and cache has been flushed."
 else
     echo "Skipping Cache Clear."
+fi
+
+# Post deploy WP-CLI Commands
+if [ ! -z "${INPUT_WPCLI_ADDITIONAL_COMMANDS^^}" ]; then
+    echo "Running additional WP CLI commands..."
+
+    eval "array=($INPUT_WPCLI_ADDITIONAL_COMMANDS)"
+
+    for command in "${array[@]}"; 
+        do 
+            ssh -v -p 22 -i ${WPE_SSHG_KEY_PRIVATE_PATH} -o StrictHostKeyChecking=no $WPE_SSH_USER "cd sites/${WPE_ENV_NAME} && $command"
+            echo "SUCCESS: Command \"$command\" Executed"
+        done        
+else
+    echo "Skipping Extra Commands."
 fi
